@@ -2,9 +2,6 @@
 // فایل اصلی ربات فیلم و سریال (سینما)
 // ==========================================
 
-const BOT_TOKEN = '8946837367:AAGwhZZQ3GG2EhcVhvnYytNNd3SbZ8ryOx4';
-
-// دیتابیس
 const DATA = {
   "فیلم": {
     "معمایی": [
@@ -127,8 +124,9 @@ function formatFilms(films) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const BOT_TOKEN = env.BOT_TOKEN; // توکن از داشبورد کلادفلر خونده می‌شه
     
-    // به هر درخواستی (GET یا POST) جواب بده
+    // تنظیم Webhook
     if (url.pathname === `/setWebhook`) {
       
       // اگر درخواست از سمت تلگرام (POST) بود
