@@ -1,10 +1,10 @@
 // ==========================================
 // فایل اصلی ربات فیلم و سریال (سینما)
-// Cloudflare Worker (بدون Secret Path)
 // ==========================================
 
-const BOT_TOKEN = '8946837367:AAGwhZZQ3GG2EhcVhvnYytNNd3SbZ8ryOx4'; // ⚠️ توکن رو دقیقا اینجا بذار
+const BOT_TOKEN = 'توکن_واقعی_اینجا'; // ⚠️ توکن رو اینجا بذار
 
+// دیتابیس
 const DATA = {
   "فیلم": {
     "معمایی": [
@@ -128,47 +128,54 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // تنظیم Webhook (مسیر مستقیم)
+    // به هر درخواستی (GET یا POST) جواب بده
     if (url.pathname === `/setWebhook`) {
+      
+      // اگر درخواست از سمت تلگرام (POST) بود
+      if (request.method === 'POST') {
+        try {
+          const update = await request.json();
+          
+          if (update.message && update.message.text === '/start') {
+            await sendMessage(update.message.chat.id, MESSAGES.start, mainMenuKeyboard());
+          }
+          
+          if (update.callback_query) {
+            const chatId = update.callback_query.message.chat.id;
+            const data = update.callback_query.data;
+            
+            if (data === 'menu_film') {
+              await sendMessage(chatId, "🎬 **انتخاب ژانر فیلم**", genreKeyboard('فیلم'));
+            } else if (data === 'menu_series') {
+              await sendMessage(chatId, "📺 **انتخاب ژانر سریال**", genreKeyboard('سریال'));
+            } else if (data === 'menu_help') {
+              await sendMessage(chatId, MESSAGES.help, mainMenuKeyboard());
+            } else if (data === 'menu_about') {
+              await sendMessage(chatId, MESSAGES.about, mainMenuKeyboard());
+            }
+            
+            if (data.startsWith('genre_')) {
+              const parts = data.split('_');
+              const type = parts[1];
+              const genre = parts[2];
+              
+              const films = DATA[type][genre] || ["فیلمی یافت نشد"];
+              const listText = formatFilms(films);
+              await sendMessage(chatId, `🎥 **لیست ۱۰۰ فیلم برتر ژانر ${genre}**\n\n${listText}`);
+            }
+          }
+          
+          return new Response('OK');
+        } catch (e) {
+          return new Response('Error: ' + e.message);
+        }
+      }
+      
+      // اگر درخواست GET بود (مثلاً از سمت مرورگر)، Webhook رو ست کن
       return new Response(await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${url.origin}/setWebhook`).then(r => r.text()));
     }
     
-    // دریافت آپدیت‌ها
-    if (url.pathname === `/setWebhook` && request.method === 'POST') {
-      const update = await request.json();
-      
-      if (update.message && update.message.text === '/start') {
-        await sendMessage(update.message.chat.id, MESSAGES.start, mainMenuKeyboard());
-      }
-      
-      if (update.callback_query) {
-        const chatId = update.callback_query.message.chat.id;
-        const data = update.callback_query.data;
-        
-        if (data === 'menu_film') {
-          await sendMessage(chatId, "🎬 **انتخاب ژانر فیلم**", genreKeyboard('فیلم'));
-        } else if (data === 'menu_series') {
-          await sendMessage(chatId, "📺 **انتخاب ژانر سریال**", genreKeyboard('سریال'));
-        } else if (data === 'menu_help') {
-          await sendMessage(chatId, MESSAGES.help, mainMenuKeyboard());
-        } else if (data === 'menu_about') {
-          await sendMessage(chatId, MESSAGES.about, mainMenuKeyboard());
-        }
-        
-        if (data.startsWith('genre_')) {
-          const parts = data.split('_');
-          const type = parts[1];
-          const genre = parts[2];
-          
-          const films = DATA[type][genre] || ["فیلمی یافت نشد"];
-          const listText = formatFilms(films);
-          await sendMessage(chatId, `🎥 **لیست ۱۰۰ فیلم برتر ژانر ${genre}**\n\n${listText}`);
-        }
-      }
-      
-      return new Response('OK');
-    }
-    
-    return new Response('Not found');
+    // برای هر مسیر دیگه، یه پیام ساده
+    return new Response('ربات فعال است. برای تست به /setWebhook بروید.', { status: 200 });
   }
 };
