@@ -1,0 +1,7 @@
+name = "movie-bot"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+SECRET_PATH = "my_secret_path_123"
