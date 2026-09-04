@@ -3,6 +3,8 @@
 // Cloudflare Worker (بدون Secret Path)
 // ==========================================
 
+const BOT_TOKEN = '8946837367:AAGwhZZQ3GG2EhcVhvnYytNNd3SbZ8ryOx4'; // ⚠️ توکن رو دقیقا اینجا بذار
+
 const DATA = {
   "فیلم": {
     "معمایی": [
@@ -125,7 +127,6 @@ function formatFilms(films) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const BOT_TOKEN = env.BOT_TOKEN; // توکن از محیط (env) خونده می‌شه
     
     // تنظیم Webhook (مسیر مستقیم)
     if (url.pathname === `/setWebhook`) {
