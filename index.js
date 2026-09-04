@@ -1,9 +1,10 @@
 // ==========================================
 // فایل اصلی ربات فیلم و سریال (سینما)
-// Cloudflare Worker
+// Cloudflare Worker (بدون Secret Path)
 // ==========================================
 
-// لیست کامل فیلم‌ها و سریال‌ها (این بخش رو با لیست ۱۰۰تایی پر کن)
+const BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'; // توکن رباتت را اینجا جایگزین کن
+
 const DATA = {
   "فیلم": {
     "معمایی": [
@@ -41,7 +42,6 @@ const DATA = {
   }
 };
 
-// پیام‌های آماده (دقیقاً همون متن‌هایی که تایید کردی)
 const MESSAGES = {
   start: `🎬 **به دنیای سینما خوش اومدی!**  
 من دستیار هوشمند تو برای کشف بهترین فیلم‌ها و سریال‌های تاریخ سینمای جهان هستم.  
@@ -69,10 +69,8 @@ Cloudflare Workers & JavaScript
 منتظر پیشنهادها و ایده‌های جدیدت هستم! 💡`
 };
 
-// رنگ‌بندی دکمه‌ها
 const BUTTON_COLORS = { green: "green", red: "red", blue: "blue" };
 
-// تابع ارسال پیام
 async function sendMessage(chatId, text, keyboard = null) {
   const payload = {
     chat_id: chatId,
@@ -88,7 +86,6 @@ async function sendMessage(chatId, text, keyboard = null) {
   });
 }
 
-// منوی اصلی
 function mainMenuKeyboard() {
   return {
     inline_keyboard: [
@@ -104,7 +101,6 @@ function mainMenuKeyboard() {
   };
 }
 
-// کیبورد ژانرها
 function genreKeyboard(type) {
   const genres = Object.keys(DATA[type]);
   const colors = [BUTTON_COLORS.green, BUTTON_COLORS.red, BUTTON_COLORS.blue];
@@ -122,34 +118,29 @@ function genreKeyboard(type) {
   return { inline_keyboard: rows };
 }
 
-// تابع فرمت کردن لیست فیلم‌ها
 function formatFilms(films) {
   return films.map((film, index) => {
     return `${index + 1}. \`${film.title}\`\n⭐️ **${film.rating}**`;
   }).join('\n\n');
 }
 
-// ورودی اصلی Cloudflare Worker
 export default {
   async fetch(request, env, ctx) {
-    const BOT_TOKEN = env.BOT_TOKEN; // توکن از محیط (Environment) خونده میشه
     const url = new URL(request.url);
     
-    // تنظیم Webhook
+    // تنظیم Webhook (مسیر مستقیم)
     if (url.pathname === `/setWebhook`) {
-      return new Response(await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${url.origin}${SECRET_PATH}`).then(r => r.text()));
+      return new Response(await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${url.origin}/setWebhook`).then(r => r.text()));
     }
     
     // دریافت آپدیت‌ها
-    if (url.pathname === SECRET_PATH && request.method === 'POST') {
+    if (url.pathname === `/setWebhook` && request.method === 'POST') {
       const update = await request.json();
       
-      // Start
       if (update.message && update.message.text === '/start') {
         await sendMessage(update.message.chat.id, MESSAGES.start, mainMenuKeyboard());
       }
       
-      // Callback
       if (update.callback_query) {
         const chatId = update.callback_query.message.chat.id;
         const data = update.callback_query.data;
